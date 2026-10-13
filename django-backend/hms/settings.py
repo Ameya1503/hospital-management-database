@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from urllib.parse import unquote, urlparse
+from urllib.parse import parse_qs, unquote, urlparse
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -63,6 +63,12 @@ elif os.environ.get('DATABASE_URL'):
     parsed_database_url = urlparse(os.environ['DATABASE_URL'])
     if parsed_database_url.scheme not in {'postgres', 'postgresql'}:
         raise RuntimeError('DATABASE_URL must use a PostgreSQL URL.')
+    database_options = {}
+    # The Render external database URL includes sslmode=require. Preserve it
+    # so local Django commands can safely connect to the managed database.
+    sslmode = parse_qs(parsed_database_url.query).get('sslmode', [None])[0]
+    if sslmode:
+        database_options['sslmode'] = sslmode
     DATABASES = {'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': parsed_database_url.path.lstrip('/'),
@@ -71,6 +77,7 @@ elif os.environ.get('DATABASE_URL'):
         'HOST': parsed_database_url.hostname or '',
         'PORT': str(parsed_database_url.port or 5432),
         'CONN_MAX_AGE': 60,
+        'OPTIONS': database_options,
     }}
 else:
     DATABASES = {'default': {
