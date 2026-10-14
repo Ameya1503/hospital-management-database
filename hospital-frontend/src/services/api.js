@@ -16,7 +16,9 @@ const handleResponse = async (response) => {
 };
 
 const getHeaders = (isMultipart = false) => {
-  const headers = { 'Cache-Control': 'no-cache', Pragma: 'no-cache', Expires: '0' };
+  // Avoid legacy cache-control headers: browsers include them in the CORS
+  // preflight request, while Django only needs Authorization and Content-Type.
+  const headers = {};
   const token = localStorage.getItem('token');
   if (token) headers.Authorization = `Token ${token}`;
   if (!isMultipart) headers['Content-Type'] = 'application/json';
