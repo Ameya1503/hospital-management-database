@@ -30,5 +30,7 @@ services:
       # Lets the locally-run Vite frontend use localhost or 127.0.0.1 on any dev port.
       - key: DJANGO_CORS_ALLOWED_ORIGIN_REGEXES
         value: ^http://(localhost|127\.0\.0\.1):[0-9]+$
+      - key: DJANGO_CORS_ALLOW_ALL_ORIGINS
+        value: "true"
       - key: DJANGO_EMAIL_BACKEND
         value: django.core.mail.backends.console.EmailBackend
