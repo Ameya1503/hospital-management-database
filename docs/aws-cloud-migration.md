@@ -53,4 +53,4 @@ ECS tasks connect to private RDS through private subnets and security groups. Se
 
 ## Not production-ready yet
 
-The Django API now replaces EmailJS-style OTP flows and clinical attachments. AI-assisted routing and Razorpay are deliberately deferred: leave `GEMINI_API_KEY` and all `RAZORPAY_*` variables unset. The React application is still configured for the Node API, so it must not be repointed until its API client and remaining real-time Socket.IO behavior have been migrated and acceptance-tested.
+The React API client now supports the Django REST API for the core workflow and is used in the Render demonstration. Before an AWS production cutover, complete acceptance testing for every role, configure a production email provider and private S3 attachment storage, and replace or retire the legacy Socket.IO real-time path. AI-assisted routing and Razorpay remain deliberately deferred: leave `GEMINI_API_KEY` and all `RAZORPAY_*` variables unset.
