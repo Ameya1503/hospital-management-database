@@ -106,6 +106,11 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in os.environ.get('DJANGO_CORS_ALLOWED_ORIGINS', '').split(',') if origin.strip()]
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    pattern.strip()
+    for pattern in os.environ.get('DJANGO_CORS_ALLOWED_ORIGIN_REGEXES', '').split(',')
+    if pattern.strip()
+]
 EMAIL_BACKEND = os.environ.get('DJANGO_EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
 DEFAULT_FROM_EMAIL = os.environ.get('DJANGO_DEFAULT_FROM_EMAIL', 'noreply@pulse-hms.local')
 EMAIL_HOST = os.environ.get('DJANGO_EMAIL_HOST', '')
