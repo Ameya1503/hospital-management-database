@@ -42,7 +42,9 @@ const PatientDashboard = ({ userId, data, onSchedule, onUpdate }) => {
 
   // --- REAL-TIME SOCKET LISTENER ---
   useEffect(() => {
-    const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000');
+    const socketUrl = import.meta.env.VITE_SOCKET_URL;
+    if (!socketUrl) return undefined;
+    const socket = io(socketUrl);
 
     socket.on("patients_updated", (eventData) => {
         if (parseInt(eventData.patient_id) === parseInt(userId)) {

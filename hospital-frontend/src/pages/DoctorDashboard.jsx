@@ -50,7 +50,9 @@ const DoctorDashboard = ({ data, userId }) => {
 
   // --- REAL-TIME LISTENERS ---
   useEffect(() => {
-    const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000');
+    const socketUrl = import.meta.env.VITE_SOCKET_URL;
+    if (!socketUrl) return undefined;
+    const socket = io(socketUrl);
 
     // 1. Inventory Updates (New Medicines added)
     socket.on("inventory_updated", () => {

@@ -94,10 +94,11 @@ class DoctorSerializer(serializers.ModelSerializer):
 class PatientSerializer(serializers.ModelSerializer):
     name = serializers.SerializerMethodField()
     email = serializers.EmailField(source='user.email', read_only=True)
+    phone = serializers.CharField(source='user.phone', read_only=True)
 
     class Meta:
         model = PatientProfile
-        fields = ('id', 'name', 'email', 'date_of_birth', 'gender', 'address', 'compliance_score')
+        fields = ('id', 'name', 'email', 'phone', 'date_of_birth', 'gender', 'address', 'compliance_score')
 
     def get_name(self, obj):
         return obj.user.get_full_name() or obj.user.email
@@ -126,9 +127,11 @@ class MedicineSerializer(serializers.ModelSerializer):
 
 
 class PrescriptionSerializer(serializers.ModelSerializer):
+    medicine_name = serializers.CharField(source='medicine.name', read_only=True)
+
     class Meta:
         model = Prescription
-        fields = ('id', 'medicine', 'dosage', 'duration', 'instructions', 'quantity')
+        fields = ('id', 'medicine', 'medicine_name', 'dosage', 'duration', 'instructions', 'quantity')
 
 
 class PrescriptionItemInputSerializer(serializers.Serializer):

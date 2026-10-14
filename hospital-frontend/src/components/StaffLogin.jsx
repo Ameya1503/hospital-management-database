@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { LoaderCircle, KeyRound, UserCircle, ArrowLeft } from 'lucide-react';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+import { api } from '../services/api';
 
 const StaffLogin = ({ role, onLoginSuccess }) => {
   // --- 1. LOGIN STATE ---
@@ -45,24 +44,10 @@ const StaffLogin = ({ role, onLoginSuccess }) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/staff/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role, id: identifier, password }),
-      });
-
-      if (!response.ok) {
-          let errorMsg = 'Login failed.';
-          try {
-              const errorData = await response.json();
-              errorMsg = errorData.error || errorMsg;
-          } catch (jsonErr) {
-              throw new Error('Server returned HTML instead of JSON. Check backend routing!');
-          }
-          throw new Error(errorMsg);
+      const result = await api.auth.loginStaff(role, identifier, password);
+      if (result.user.role !== role.toLowerCase()) {
+        throw new Error(`This account is a ${result.user.role}, not a ${role}.`);
       }
-
-      const result = await response.json();
 
       // --- 🔴 THE FIX: Ensure we save it as 'token' so api.js can find it ---
       localStorage.setItem('token', result.token);
@@ -70,7 +55,7 @@ const StaffLogin = ({ role, onLoginSuccess }) => {
       localStorage.setItem('user_name', result.user.name);
       localStorage.setItem('user_role', result.user.role);
 
-      onLoginSuccess(role, result.user.id, result.user.name);
+      onLoginSuccess(role, result.user.profile_id, result.user.name);
       
     } catch (err) {
       setError(err.message);
@@ -85,16 +70,7 @@ const StaffLogin = ({ role, onLoginSuccess }) => {
     setResetMessage('');
     setIsSendingOtp(true);
     try {
-        const res = await fetch(`${API_BASE_URL}/forgot-password`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: resetEmail, role })
-        });
-        
-        if (!res.ok) {
-             const data = await res.json().catch(() => ({ error: 'Failed to send OTP' }));
-             throw new Error(data.error);
-        }
+        await api.auth.requestPasswordReset(resetEmail);
         
         setResetStep(2);
         setResetMessage('OTP sent to your email!');
@@ -111,16 +87,7 @@ const StaffLogin = ({ role, onLoginSuccess }) => {
     setResetMessage('');
     setIsResetting(true);
     try {
-        const res = await fetch(`${API_BASE_URL}/reset-password`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: resetEmail, otp: resetOtp, newPassword: resetNewPassword, role })
-        });
-        
-        if (!res.ok) {
-             const data = await res.json().catch(() => ({ error: 'Failed to reset password' }));
-             throw new Error(data.error);
-        }
+        await api.auth.confirmPasswordReset(resetEmail, resetOtp, resetNewPassword);
         
         alert("Password Reset Successfully! Please log in.");
         setIsForgotPassword(false);
@@ -203,10 +170,10 @@ const StaffLogin = ({ role, onLoginSuccess }) => {
       
       <div className="space-y-4">
         <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Email Address or {role} ID</label>
+            <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Email Address</label>
             <div className="relative">
                 <UserCircle className="w-5 h-5 text-slate-400 absolute left-3 top-3" />
-                <input type="text" value={identifier} onChange={(e) => setIdentifier(e.target.value)} className={`w-full p-3 pl-10 border border-slate-200 rounded-xl focus:ring-2 outline-none transition font-mono ${theme.ring}`} placeholder="Email or ID" required />
+                <input type="email" value={identifier} onChange={(e) => setIdentifier(e.target.value)} className={`w-full p-3 pl-10 border border-slate-200 rounded-xl focus:ring-2 outline-none transition font-mono ${theme.ring}`} placeholder="name@example.com" required />
             </div>
         </div>
         <div>

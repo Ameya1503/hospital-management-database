@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Clock, AlertCircle, Sparkles, BrainCircuit } from 'lucide-react'; 
 import Card from './Card'; 
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+import { api } from '../services/api';
 
 const AppointmentScheduler = ({ patientId, doctors, onSchedule }) => {
   const [selectedDoctorId, setSelectedDoctorId] = useState('');
@@ -48,23 +47,7 @@ const AppointmentScheduler = ({ patientId, doctors, onSchedule }) => {
 
     try {
         // 🔴 THE FIX: GRAB THE TOKEN AND PASS IT TO THE BOUNCER
-        const token = localStorage.getItem('token');
-        
-        const response = await fetch(`${API_BASE_URL}/triage`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}` // Show the ID card!
-            },
-            body: JSON.stringify({ 
-                symptoms: symptomsRaw,
-                available_doctors: doctors 
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) throw new Error(data.error || 'AI Analysis failed.');
+        const data = await api.triage(symptomsRaw, doctors);
 
         // Auto-select the doctor the AI recommended!
         setSelectedDoctorId(data.recommended_doctor_id.toString());
@@ -99,22 +82,7 @@ const AppointmentScheduler = ({ patientId, doctors, onSchedule }) => {
 
     try {
       // 🔴 THE FIX: ATTACH THE TOKEN HERE AS WELL
-      const token = localStorage.getItem('token');
-      
-      const response = await fetch(`${API_BASE_URL}/appointments`, {
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}` // Show the ID card!
-        },
-        body: JSON.stringify(newAppointmentData),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Failed to book appointment.');
-      }
+      const result = await api.appointments.create(newAppointmentData);
 
       onSchedule(result);
       

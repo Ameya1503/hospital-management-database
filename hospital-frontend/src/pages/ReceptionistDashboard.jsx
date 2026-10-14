@@ -7,8 +7,6 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable'; 
 import { io } from "socket.io-client"; 
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-
 const ReceptionistDashboard = ({ data, onUpdate }) => {
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -53,7 +51,9 @@ const ReceptionistDashboard = ({ data, onUpdate }) => {
 
   // --- REAL-TIME SOCKET LISTENER ---
   useEffect(() => {
-    const socket = io(import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000');
+    const socketUrl = import.meta.env.VITE_SOCKET_URL;
+    if (!socketUrl) return undefined;
+    const socket = io(socketUrl);
 
     socket.on("inventory_updated", (data) => {
         handleRefreshInventory(true); 
@@ -105,7 +105,7 @@ const ReceptionistDashboard = ({ data, onUpdate }) => {
     const { id, stock } = editingMedicine;
     try {
         const res = await api.inventory.updateStock(id, parseInt(stock, 10));
-        setInventoryList(prev => prev.map(m => m.medicine_id === id ? res.medicine : m));
+        setInventoryList(prev => prev.map(m => m.medicine_id === id ? res : m));
         setEditingMedicine({ id: null, stock: 0 });
     } catch (e) { console.error(e); }
   };
@@ -136,12 +136,9 @@ const ReceptionistDashboard = ({ data, onUpdate }) => {
 
   const handleUpdateBillStatus = async (billId, newStatus) => {
     setBills(prev => prev.map(b => b.bill_id === billId ? { ...b, status: newStatus } : b));
-    try { 
-        await fetch(`${API_BASE_URL}/bills/${billId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ status: newStatus })
-        });
+    try {
+        const updated = await api.billing.updateStatus(billId, newStatus);
+        setBills(prev => prev.map(b => b.bill_id === billId ? updated : b));
     } catch (error) { console.error(error); }
   };
 

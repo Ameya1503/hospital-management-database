@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { api } from '../services/api';
 import { LoaderCircle, Send, CheckCircle, ArrowLeft, UserCircle, KeyRound, Mail, Phone, MapPin, Calendar, Users } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
-
 const PatientLogin = ({ onLoginSuccess, onRegister }) => {
   const [tab, setTab] = useState('signin');
 
@@ -17,7 +15,7 @@ const PatientLogin = ({ onLoginSuccess, onRegister }) => {
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState(''); 
   const [regPhone, setRegPhone] = useState('');
-  const [regAge, setRegAge] = useState('');
+  const [regDateOfBirth, setRegDateOfBirth] = useState('');
   const [regGender, setRegGender] = useState('M');
   const [regAddress, setRegAddress] = useState('');
   const [regPassword, setRegPassword] = useState('');
@@ -60,7 +58,10 @@ const PatientLogin = ({ onLoginSuccess, onRegister }) => {
       localStorage.setItem('user_id', result.user.patient_id);
       localStorage.setItem('user_name', result.user.name);
       localStorage.setItem('user_role', result.user.role);
-      onLoginSuccess(result.user.role, result.user.patient_id, result.user.name);
+      if (result.user.role !== 'patient' || !result.user.patient_id) {
+        throw new Error('Please use a patient account for the Patient Portal.');
+      }
+      onLoginSuccess('Patient', result.user.patient_id, result.user.name);
     } catch (err) {
       setSignInError(err.message);
     } finally {
@@ -109,14 +110,15 @@ const PatientLogin = ({ onLoginSuccess, onRegister }) => {
 
     try {
       const newPatientData = {
-        name: regName,
+        first_name: regName.trim().split(/\s+/)[0],
+        last_name: regName.trim().split(/\s+/).slice(1).join(' '),
         email: regEmail,
-        age: parseInt(regAge),
+        date_of_birth: regDateOfBirth,
         gender: regGender,
         phone: regPhone,
         address: regAddress,
         password: regPassword,
-        otp: otp 
+        code: otp
       };
 
       const result = await api.auth.registerPatient(newPatientData);
@@ -134,13 +136,7 @@ const PatientLogin = ({ onLoginSuccess, onRegister }) => {
       setResetMessage('');
       setIsSendingOtp(true);
       try {
-          const res = await fetch(`${API_BASE_URL}/forgot-password`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: resetEmail, role: 'patient' })
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error);
+          await api.auth.requestPasswordReset(resetEmail);
           setResetStep(2);
           setResetMessage('OTP sent to your email!');
       } catch (err) {
@@ -155,13 +151,7 @@ const PatientLogin = ({ onLoginSuccess, onRegister }) => {
       setResetMessage('');
       setIsRegistering(true); 
       try {
-          const res = await fetch(`${API_BASE_URL}/reset-password`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: resetEmail, otp: resetOtp, newPassword: resetNewPassword, role: 'patient' })
-          });
-          const data = await res.json();
-          if (!res.ok) throw new Error(data.error);
+          await api.auth.confirmPasswordReset(resetEmail, resetOtp, resetNewPassword);
           
           alert("Password Reset Successfully! Please sign in.");
           setIsForgotPassword(false);
@@ -325,10 +315,10 @@ const PatientLogin = ({ onLoginSuccess, onRegister }) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Age</label>
+              <label className="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Date of Birth</label>
               <div className="relative">
                   <Calendar className="w-5 h-5 text-slate-400 absolute left-3 top-3.5" />
-                  <input type="number" value={regAge} onChange={(e) => setRegAge(e.target.value)} className={`w-full p-3 pl-10 border border-slate-200 rounded-xl outline-none transition ${theme.ring}`} placeholder="Years" required />
+                  <input type="date" value={regDateOfBirth} onChange={(e) => setRegDateOfBirth(e.target.value)} className={`w-full p-3 pl-10 border border-slate-200 rounded-xl outline-none transition ${theme.ring}`} required />
               </div>
             </div>
             <div>
