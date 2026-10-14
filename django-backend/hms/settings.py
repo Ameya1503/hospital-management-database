@@ -111,10 +111,6 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
     for pattern in os.environ.get('DJANGO_CORS_ALLOWED_ORIGIN_REGEXES', '').split(',')
     if pattern.strip()
 ]
-# The Render demo uses a locally-run frontend whose Vite port can vary. This is
-# limited to the short-lived demonstration deployment; production must set an
-# explicit origin allow-list instead.
-CORS_ALLOW_ALL_ORIGINS = os.environ.get('DJANGO_CORS_ALLOW_ALL_ORIGINS', '').lower() == 'true'
 EMAIL_BACKEND = os.environ.get('DJANGO_EMAIL_BACKEND', 'django.core.mail.backends.console.EmailBackend')
 DEFAULT_FROM_EMAIL = os.environ.get('DJANGO_DEFAULT_FROM_EMAIL', 'noreply@pulse-hms.local')
 EMAIL_HOST = os.environ.get('DJANGO_EMAIL_HOST', '')
